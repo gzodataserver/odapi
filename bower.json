@@ -1,7 +1,7 @@
 {
   "name": "odapi",
   "main": "index.min.js",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "authors": [
     "Jonas Colmsjö <jonas.colmsjo@gizur.com>"
   ],
