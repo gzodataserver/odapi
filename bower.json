@@ -1,0 +1,25 @@
+{
+  "name": "odsapi",
+  "main": "index.min.js",
+  "version": "0.0.1",
+  "authors": [
+    "Jonas Colmsjö <jonas.colmsjo@gizur.com>"
+  ],
+  "description": "JS Api for working with an OData backend",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "ydn.db": "~1.3.3",
+    "bluebird": "*",
+    "lodash": "*",
+    "helpersjs": "*",
+    "remote": "*",
+    "chai": "~3.5.0"
+  }
+}
