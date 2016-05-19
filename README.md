@@ -1,4 +1,4 @@
-ODSync
+ODApi
 ======
 
 Build with [`gulp`](https://github.com/gulpjs/gulp). Install with: `npm install gulp gulp-concat gulp-rename gulp-uglify`.
@@ -14,7 +14,7 @@ You need a odataserver2 backend. Make sure it is running if you have it installe
 Test the mysql functions with: `testOdata.createAccounts()` followed by `testOdata.testMysql()`.
 You will get a 406 if the account already exists.
 The function `testOdata.cleanup()` can be used to make sure all old test data is deleted.
-The accunts will not be deleted though.
+The accounts will not be deleted though.
 
 Test the leveldb functions with: `testOdata.createAccounts()` followed by `testOdata.testLevelDb()`.
 
@@ -48,6 +48,7 @@ Let's gather the credentials in an object so we don't have to type them:
 
 Take a note of the account id that was returned. Now generate a password:
 `Odata.resetPassword(options2).then(function(res){log(options2.password=res.data[0].password)}, error)`
+
 
 Working with tables
 --------------------
