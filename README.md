@@ -95,7 +95,7 @@ Working with buckets
 
 Create a bucket (key/value store):
 
-    var od = new Odata(Odata.DEV_URL, '3ea8f06baf64', 'o1Z4zxyPSUQO');
-    od.createBucket('b_mybucket').then(log);
+    var od = new Odata(options);
+    od.grantBucket('3ea8f06baf64', 'b_mybucket').then(log);
     od.store('3ea8f06baf64', 'b_mybucket', 'Some data to store in a bucket').then(log);
     od.fetch('3ea8f06baf64', 'b_mybucket').then(log);

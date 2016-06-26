@@ -136,6 +136,7 @@
     });
   };
 
+  // NOTE: crate_bucket is not used anymore, just grant privs instead
   // `curl -H "user:3ea8f06baf64" -H "password:xxx" -d '{"bucketName":"b_mybucket"}' http://[IP]:[PORT]/3ea8f06baf64/s/create_bucket`
   Odata.prototype.createBucket = function (bucketName) {
     var data = {
@@ -279,7 +280,7 @@
       var msg = "options needs to be setup when working with buckets (see Odata.help('accounts') ):"  +
         "\n\nvar log = console.log.bind(console);" +
         "\n\nvar od = new Odata(options);" +
-        "\nod.createBucket('b_mybucket').then(log);" +
+        "\nood.grantBucket(options.accountId,'b_mybucket').then(log);" +
         "\nod.store(options.accountId, 'b_mybucket', 'Some data to store in a bucket').then(log);" +
         "\nod.fetch(options.accountId, 'b_mybucket').then(log);" +
         "\n";
