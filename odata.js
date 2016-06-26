@@ -166,6 +166,15 @@
       this.credentials);
   };
 
+  // curl -H "user:3ea8f06baf64" -H "password:xxx" -d '{"procedure":"myProcedure","params":["\"param1\"","\"param2\"","3"]}' http://[IP]:[PORT]/3ea8f06baf64/s/exec
+  Odata.prototype.executeProcedure = function (accountId, procedure, params) {
+    var data = {
+      procedure: procedure,
+      params: params
+    };
+    return remote.xhrJSON(this.url + accountId + '/s/exec', 'POST', data, this.credentials);
+  };
+
   //`curl -H "user:3ea8f06baf64" -H "password:xxx" -d '{"name":"mytable","accountId":"6adb637f9cf2"}' http://[IP]:[PORT]/3ea8f06baf64/s/grant_bucket`
   Odata.prototype.grantBucket = function (accountId, name) {
     var data = {
