@@ -5,7 +5,7 @@
   // ========
 
   var log = console.log.bind(console);
-  var info = console.info.bind(console, 'INFO');
+  var info = console.info.bind(console);
   var debug = console.debug.bind(console, 'DEBUG');
   var error = console.error.bind(console, 'ERROR');
 
@@ -158,10 +158,11 @@
       this.credentials);
   };
 
-  // curl -X POST -H "user:3ea8f06baf64" -H "password:xxx" -d '{"accountId":"3ea8f06baf64"}' http://[IP]:[PORT]/3ea8f06baf64/s/delete_account
-  Odata.prototype.deleteAccount = function (accountId) {
+  // curl -X POST -H "user:3ea8f06baf64" -H "password:xxx" -d '{"accountId":"3ea8f06baf64","email":"joe@example.com"}' http://[IP]:[PORT]/3ea8f06baf64/s/delete_account
+  Odata.prototype.deleteAccount = function (accountId, email) {
     var data = {
-      accountId: accountId
+      accountId: accountId,
+      email: email
     };
     return remote.xhrJSON(this.url + accountId + '/s/delete_account', 'POST', data,
       this.credentials);

@@ -5,7 +5,7 @@
   // ========
 
   var log = console.log.bind(console);
-  var info = console.info.bind(console, 'INFO');
+  var info = console.info.bind(console);
   var debug = console.debug.bind(console, 'DEBUG');
   var error = console.error.bind(console, 'ERROR');
 
@@ -36,16 +36,12 @@
 
   // TODO: cleanup this
   //Odata.xhr = remote.xhr;
-  Odata.DEV_URL = 'http://localhost:3000/';
+  Odata.DEV_URL = 'https://odatadev.gizur.com/';
   Odata.PROD_URL = 'https://odata.gizur.com/';
-
-  Odata.help = function (url) {
-    if (!url) throw 'ERROR: Mandatory argument missing.';
-    return remote.xhrJSON(url + 'help', 'GET');
-  }
 
   // curl -d '{"email":"joe@example.com"}' http://[IP]:[PORT]/create_account
   Odata.createAccount = function (options) {
+    debug('createAccount', options);
     var data = {
       email: options.email
     };
@@ -140,6 +136,7 @@
     });
   };
 
+  // NOTE: crate_bucket is not used anymore, just grant privs instead
   // `curl -H "user:3ea8f06baf64" -H "password:xxx" -d '{"bucketName":"b_mybucket"}' http://[IP]:[PORT]/3ea8f06baf64/s/create_bucket`
   Odata.prototype.createBucket = function (bucketName) {
     var data = {
@@ -161,13 +158,23 @@
       this.credentials);
   };
 
-  // curl -X POST -H "user:3ea8f06baf64" -H "password:xxx" -d '{"accountId":"3ea8f06baf64"}' http://[IP]:[PORT]/3ea8f06baf64/s/delete_account
-  Odata.prototype.deleteAccount = function (accountId) {
+  // curl -X POST -H "user:3ea8f06baf64" -H "password:xxx" -d '{"accountId":"3ea8f06baf64","email":"joe@example.com"}' http://[IP]:[PORT]/3ea8f06baf64/s/delete_account
+  Odata.prototype.deleteAccount = function (accountId, email) {
     var data = {
-      accountId: accountId
+      accountId: accountId,
+      email: email
     };
     return remote.xhrJSON(this.url + accountId + '/s/delete_account', 'POST', data,
       this.credentials);
+  };
+
+  // curl -H "user:3ea8f06baf64" -H "password:xxx" -d '{"procedure":"myProcedure","params":["\"param1\"","\"param2\"","3"]}' http://[IP]:[PORT]/3ea8f06baf64/s/exec
+  Odata.prototype.executeProcedure = function (accountId, procedure, params) {
+    var data = {
+      procedure: procedure,
+      params: params
+    };
+    return remote.xhrJSON(this.url + accountId + '/s/exec', 'POST', data, this.credentials);
   };
 
   //`curl -H "user:3ea8f06baf64" -H "password:xxx" -d '{"name":"mytable","accountId":"6adb637f9cf2"}' http://[IP]:[PORT]/3ea8f06baf64/s/grant_bucket`
@@ -190,93 +197,104 @@
     return remote.xhrJSON(this.url + this.accountId + '/s/revoke_bucket', 'POST', data, this.credentials);
   };
 
+  // Command line help, static functions on the App object
+  // -----------------------------------------------------
+
+  Odata.help2 = function (url) {
+    if (!url) throw 'ERROR: Mandatory url argument is missing. The constants Odata.DEV_URL and Odata.PROD_URL can for instance be used.';
+    return remote.xhrJSON(url + 'help', 'GET');
+  }
+
+  Odata.help = function (topic) {
+
+    var footer = '\n\n-----\nSee Odata.help("accounts") for how to setup an account.';
+
+    if (!topic) {
+
+      var msg =
+        '-- Odata API help --' +
+        "\n\n* Odata.help('accounts') - create accounts, reset password etc." +
+        "\n* Odata.help('tables') - working with tables" +
+        "\n* Odata.help('buckets') - working with buckets";
+
+      info(msg);
+
+      return;
+    }
+
+    if (topic === 'accounts') {
+      var msg = "An account can be created in the odata server if you don't alreqady have one:"  +
+        "\nThis creas an account and saves the accountid in options.accountId" +
+        "\nA 404 i received if the account already exists, the account id is saved anyway" +
+        "\n\nvar log = console.log.bind(console);" +
+        "\n\nvar options = {url: Odata.DEV_URL, email: 'joe@example.com'};" +
+        '\nOdata.createAccount(options).then(' +
+        '\n\tfunction(res){log(options.accountId=res.data[1].accountId)}, ' +
+        '\n\tfunction(res){log(options.accountId=res.data[1].accountId)});' +
+        '\n' +
+        "\nOdata.resetPassword(options).then(" +
+        "\n\tfunction(res){log(options.password=res.data[0].password)}, log);" +
+        "\n\nNow is options setup with the required data to work with the odataserver" +
+        "\n\nA second account is used in some of the examples in this help." +
+        "\n\nvar options2 = {url: Odata.DEV_URL, email: 'gina@example.com'}" +
+        '\nOdata.createAccount(options2).then(' +
+        '\n\tfunction(res){log(options2.accountId=res.data[1].accountId)}, ' +
+        '\n\tfunction(res){log(options2.accountId=res.data[1].accountId)});' +
+        '\n' +
+        "\nOdata.resetPassword(options2).then(" +
+        "\n\tfunction(res){log(options2.password=res.data[0].password)}, log);" +
+        "\n\nDelete an account" +
+        "\nvar od = new Odata(options);" +
+        "\nod.deleteAccount(options.accountId).then(log);" +
+        "\n";
+
+      info(msg);
+    }
+
+    else if (topic === 'tables') {
+      var msg = "options needs to be setup when working with tables (see Odata.help('accounts') ):"  +
+        "\n\nvar log = console.log.bind(console);" +
+        "\n\nvar od = new Odata(options);" +
+        "\nod.createTable('mytable', ['col1 int','col2 varchar(255)']).then(log);" +
+        "\nod.accountInfo().then(log);" +
+        "\n" +
+        "\n\nod.grant('mytable', options2.accountId).then(console.log.bind(console));" +
+        "\nod.insert(options.accountId, 'mytable', {col1:11, col2:'11'}).then(log);" +
+        "\nod.insert(options.accountId, 'mytable', {col1:1000, col2:'1010'}).then(log);" +
+        "\nod.get(options.accountId, 'mytable').then(log);" +
+        "\nod.get(options.accountId, 'mytable', 'col1').then(log);" +
+        "\nod.get(options.accountId, 'mytable', null, 'col1 eq 11').then(log);" +
+        "\n\n//delete a row" +
+        "\nod.delete(options.accountId, 'mytable', 'col1 eq 11').then(log);" +
+        "\nod.get(options.accountId, 'mytable').then(log);" +
+        "\n\n//update a row" +
+        "\nod.update(options.accountId, 'mytable', {col1:1000,col2:'1011'}, 'col1 eq 1000').then(log);" +
+        "\nod.get(options.accountId, 'mytable').then(log);" +
+        "\n//drop a table" +
+        "\nod.drop('mytable').then(log);" +
+        "\n";
+
+      info(msg);
+    }
+
+    else if (topic === 'buckets') {
+      var msg = "options needs to be setup when working with buckets (see Odata.help('accounts') ):"  +
+        "\n\nvar log = console.log.bind(console);" +
+        "\n\nvar od = new Odata(options);" +
+        "\nood.grantBucket(options.accountId,'b_mybucket').then(log);" +
+        "\nod.store(options.accountId, 'b_mybucket', 'Some data to store in a bucket').then(log);" +
+        "\nod.fetch(options.accountId, 'b_mybucket').then(log);" +
+        "\n";
+
+      info(msg);
+    }
+
+  }
 
   // exports
   // ========
 
   window.Odata = Odata;
 
-
-}());
-
-;
-(function () {
-
-  // imports
-  // =======
-
-  var log = console.log.bind(console);
-  var info = console.info.bind(console);
-  var debug = console.debug.bind(console);
-  var error = console.error.bind(console);
-
-  var R = window.remote;
-
-  // Odatasync class
-  // ===============
-
-  var DB_PREFIX = 'Odsync_'
-
-  // constructor
-  Odsync = function (srcDbName, srcSchema, url, accountId, password) {
-    if (!srcDbName || !srcSchema || !url || !accountId || !password)
-      throw new("ERROR: srcDbName, srcSchema, user and password must be set!");
-
-    this.srcDbName = srcDbName;
-    this.srcSchema = srcSchema;
-
-    this.dstDbName = DB_PREFIX + srcDbName;
-    this.dstSchema = srcSchema;
-
-    this.dbSrc = new ydn.db.Storage(srcDbName, srcSchema);
-    this.yhSrc = ydbjoin.createYdbHelper(this.dbSrc);
-
-    this.dbDst = new ydn.db.Storage(this.dstDbName, this.dstSchema);
-    this.yhDst = ydbjoin.createYdbHelper(this.dbDst);
-
-    this.url = url;
-    this.accountId = accountId;
-    this.password = password;
-  };
-
-  var calcEtags_ = function (schemaRow) {
-    var keyPath = schemaRow.keyPath;
-    var storeName = schemaRow.name;
-
-    this.dbDst.clear(storeName);
-
-    return this.yhSrc.iterateOs(storeName, function (row) {
-      var res = {};
-      res[keyPath] = row[keyPath];
-      //      res['etag'] = helpers.etag(JSON.stringify(row));
-      res['etag'] = etag.md5(row);
-      this.dbDst.put(storeName, res);
-    }.bind(this));
-  };
-
-  Odsync.prototype.calcEtags = function () {
-    return this.srcSchema.stores.forEach(calcEtags_.bind(this));
-  };
-
-  Odsync.prototype.fetchBackendEtags = function () {
-    var self = this;
-
-    promises = [];
-    self.srcSchema.stores.forEach(function (store) {
-      debug(self.dbDst.clear(store.name));
-      promises.push(self.dbDst.clear(store.name).then(function () {
-        return R.xhrToDb2(self.dstDbName, store.name, store.keyPath,
-          self.url + self.accountId + '/' + store.name + '?$select=' + store.keyPath + ',@odata.etag',
-          'GET', null, null, self.accountId, self.password)
-      }));
-
-    });
-
-    // execute promises in sequence
-    return Promise.each(promises);
-    //return Promise.all(promises);
-  };
-
-  window.Odsync = Odsync;
 
 }());
